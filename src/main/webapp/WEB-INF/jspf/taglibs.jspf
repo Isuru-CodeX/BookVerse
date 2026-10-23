@@ -1,0 +1,6 @@
+<%-- Included automatically in every JSP by <include-prelude> in web.xml --%>
+<%@ taglib prefix="c"  uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="bv" uri="http://bookverse.lk/tags" %>
+<%@ taglib prefix="t"  tagdir="/WEB-INF/tags" %>

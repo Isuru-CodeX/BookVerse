@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<taglib xmlns="http://java.sun.com/xml/ns/javaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
+        version="2.1">
+  <description>BookVerse custom tag library</description>
+  <tlib-version>1.0</tlib-version>
+  <short-name>bv</short-name>
+  <uri>http://bookverse.lk/tags</uri>
+
+  <tag>
+    <description>Renders a star rating (SimpleTag handler).</description>
+    <name>rating</name>
+    <tag-class>com.bookverse.tag.RatingTag</tag-class>
+    <body-content>empty</body-content>
+    <attribute>
+      <description>Rating value, e.g. 4.6</description>
+      <name>value</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>double</type>
+    </attribute>
+    <attribute>
+      <description>Maximum stars (default 5)</description>
+      <name>max</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>int</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Availability badge (classic Tag handler).</description>
+    <name>availability</name>
+    <tag-class>com.bookverse.tag.AvailabilityTag</tag-class>
+    <body-content>empty</body-content>
+    <attribute>
+      <name>copies</name>
+      <required>true</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>int</type>
+    </attribute>
+    <attribute>
+      <description>Show "last copy" style warning at or below this number (default 1)</description>
+      <name>lowStock</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>int</type>
+    </attribute>
+  </tag>
+
+  <tag>
+    <description>Escapes the body and highlights keyword matches (BodyTag handler).</description>
+    <name>highlight</name>
+    <tag-class>com.bookverse.tag.HighlightTag</tag-class>
+    <body-content>JSP</body-content>
+    <attribute>
+      <name>keyword</name>
+      <required>false</required>
+      <rtexprvalue>true</rtexprvalue>
+      <type>java.lang.String</type>
+    </attribute>
+  </tag>
+</taglib>
