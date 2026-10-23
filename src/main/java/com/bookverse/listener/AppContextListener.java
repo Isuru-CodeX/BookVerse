@@ -70,8 +70,14 @@ public class AppContextListener implements ServletContextListener {
     }
 
     private static String setting(ServletContext ctx, String env, String param) {
+        // Securely retrieve setting from environment variables or system properties first
         String v = System.getenv(env);
-        if (v == null || v.trim().isEmpty()) v = ctx.getInitParameter(param);
+        if (v == null || v.trim().isEmpty()) {
+            v = System.getProperty(env);
+        }
+        if (v == null || v.trim().isEmpty()) {
+            v = ctx.getInitParameter(param);
+        }
         return v == null ? "" : v.trim();
     }
 }

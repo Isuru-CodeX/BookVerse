@@ -1,0 +1,4 @@
+## 2023-10-24 - Removed Hardcoded Secrets
+**Vulnerability:** The application stored its database password, user, and URL in plain text within `src/main/webapp/WEB-INF/web.xml`. This exposes critical infrastructure credentials to anyone with read access to the source code repository.
+**Learning:** Legacy Java applications often define configuration parameters directly in `web.xml` using `<context-param>`. This pattern is insecure for secrets. The application already supported an environment-variable override in `AppContextListener.java` (`BOOKVERSE_DB_PASSWORD`), which was a good start.
+**Prevention:** Always rely on environment variables (`System.getenv()`), system properties (`System.getProperty()`), or external secret managers for sensitive configuration. Avoid default fallback credentials in codebase files, even for local development setups.
