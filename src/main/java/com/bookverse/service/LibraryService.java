@@ -582,17 +582,19 @@ public class LibraryService {
                 .entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(6)
                 .forEach(e -> perTitle.put(e.getKey(), e.getValue()));
 
+        // ⚡ Bolt: Optimized O(N*M) nested loops to O(N+M) using frequency maps for plan members and category copies
+        Map<String, Integer> memberCounts = new java.util.HashMap<>();
+        for (Member m : members) memberCounts.merge(m.getMembershipType(), 1, Integer::sum);
         Map<String, Integer> perPlan = new LinkedHashMap<>();
         for (MembershipPlan p : plans.values()) {
-            int n = 0;
-            for (Member m : members) if (p.getType().equals(m.getMembershipType())) n++;
-            perPlan.put(p.getLabel(), n);
+            perPlan.put(p.getLabel(), memberCounts.getOrDefault(p.getType(), 0));
         }
+
+        Map<String, Integer> categoryCopies = new java.util.HashMap<>();
+        for (Book b : books) categoryCopies.merge(b.getCategory(), b.getTotalCopies(), Integer::sum);
         Map<String, Integer> perCategory = new LinkedHashMap<>();
         for (String c : getCategories()) {
-            int copies = 0;
-            for (Book b : books) if (b.getCategory().equals(c)) copies += b.getTotalCopies();
-            perCategory.put(c, copies);
+            perCategory.put(c, categoryCopies.getOrDefault(c, 0));
         }
         int active = 0, overdue = 0, returned = 0;
         for (Reservation r : reservations) {
