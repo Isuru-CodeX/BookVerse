@@ -28,15 +28,15 @@
   </context-param>
   <context-param>
     <param-name>db.url</param-name>
-    <param-value>jdbc:mysql://localhost:3306/bookverse?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=Asia/Colombo&amp;useUnicode=true&amp;characterEncoding=UTF-8</param-value>
+    <param-value></param-value>
   </context-param>
   <context-param>
     <param-name>db.user</param-name>
-    <param-value>root</param-value>
+    <param-value></param-value>
   </context-param>
   <context-param>
     <param-name>db.password</param-name>
-    <param-value>I@suru2005110</param-value>
+    <param-value></param-value>
   </context-param>
 
   <!-- Listeners -->
