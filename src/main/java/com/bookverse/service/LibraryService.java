@@ -211,7 +211,8 @@ public class LibraryService {
         switch (c.getSort()) {
             case "rating": order = Comparator.comparingDouble(Book::getRating).reversed(); break;
             case "year":   order = Comparator.comparingInt(Book::getYear).reversed(); break;
-            default:       order = Comparator.comparing(b -> b.getTitle().toLowerCase());
+            // ⚡ Bolt: Prevented O(N log N) String allocations during sorting by using CASE_INSENSITIVE_ORDER
+            default:       order = Comparator.comparing(Book::getTitle, String.CASE_INSENSITIVE_ORDER);
         }
         return books.stream()
                 .filter(b -> kw.isEmpty() || b.getTitle().toLowerCase().contains(kw) || b.getAuthor().toLowerCase().contains(kw))
