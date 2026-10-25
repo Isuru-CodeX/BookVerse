@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.ListIterator;
 import java.util.regex.Pattern;
 import java.util.List;
 import java.util.Map;
@@ -227,9 +228,13 @@ public class LibraryService {
     }
 
     public List<Book> newestAdditions(int n) {
-        List<Book> copy = new ArrayList<>(books);
-        Collections.reverse(copy);
-        return copy.subList(0, Math.min(n, copy.size()));
+        // ⚡ Bolt: Prevented O(N) memory allocation by using a backward-traversing ListIterator
+        List<Book> newest = new ArrayList<>(Math.min(n, books.size()));
+        ListIterator<Book> it = books.listIterator(books.size());
+        while (it.hasPrevious() && newest.size() < n) {
+            newest.add(it.previous());
+        }
+        return newest;
     }
 
     public List<Book> relatedTo(Book book, int n) {
@@ -341,9 +346,13 @@ public class LibraryService {
     }
 
     public List<Announcement> latestAnnouncements(int n) {
-        List<Announcement> copy = new ArrayList<>(announcements);
-        Collections.reverse(copy);
-        return copy.subList(0, Math.min(n, copy.size()));
+        // ⚡ Bolt: Prevented O(N) memory allocation by using a backward-traversing ListIterator
+        List<Announcement> latest = new ArrayList<>(Math.min(n, announcements.size()));
+        ListIterator<Announcement> it = announcements.listIterator(announcements.size());
+        while (it.hasPrevious() && latest.size() < n) {
+            latest.add(it.previous());
+        }
+        return latest;
     }
 
     public synchronized void addFeedback(FeedbackBean fb) {
