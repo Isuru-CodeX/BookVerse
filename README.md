@@ -1,93 +1,128 @@
 # BookVerse Online Library Portal
+
 **HF2K – Web Component Development II · Component A (Web Application Development Project)**
 
-A JSP-based Java EE web application (Servlet 4.0 / JSP 2.3 / EL / JSTL 1.2) for the BookVerse scenario.
-Data is held in memory (`LibraryService`), so no database or extra setup is needed.
+A JSP-based Java EE web application (Servlet 4.0 / JSP 2.3 / EL / JSTL 1.2) for the BookVerse scenario. This portal allows members to browse a catalogue, reserve books, and manage their membership plans, while staff can manage inventory, users, and loans via an administrative interface. Data is held in memory (`LibraryService`), so no database or extra setup is strictly needed, though a MySQL database mode is recommended.
 
-## 1. Run it
+## Features
 
-The application works in **two modes**:
-* **MySQL database mode** (recommended): all data is stored in the `bookverse` database, so it survives restarts.
-* **In-memory demo mode**: used automatically if no database is reachable. Data resets on every restart.
-The page footer shows which mode is active ("Data store: MySQL database").
+- **Dual Modes:** Runs with a MySQL database for persistent storage (recommended), or automatically falls back to an in-memory demo mode (which resets on every restart) if no database is reachable.
+- **Member Features:**
+  - Browse and search the book catalogue.
+  - Reserve and return books.
+  - Manage membership plans (Standard, Premium, Student) and renew loans.
+  - Submit feedback and view announcements.
+- **Admin (Staff) Panel:**
+  - **Overview:** Statistics, overdue loans (return / +7 days), sold-out titles.
+  - **Books:** Search, add, edit (copies, rating, details), and delete titles (blocked while on loan).
+  - **Members:** Search, filter, change plans, name, roles (Member/Staff), status (Active/Suspended), and reset passwords. See loan history.
+  - **Loans:** Manage all active/overdue/returned loans, force return, or extend due dates by 7 days.
+  - **Plans:** Edit booking rules of Standard, Premium, and Student.
+  - **Announcements & Feedback:** Publish news, read and delete user feedback.
+  - **Reports:** View system-wide statistics (most borrowed, copies by category, etc.).
+- **Technical Features:** MVC architecture, Front Controller pattern, Custom JSP Tags, Intercepting Filters, and DAO pattern implementation.
 
-### Step-by-step: add the MySQL database
+## Technologies Used
 
-**Step 1 - Install MySQL 8 (or XAMPP / MariaDB) and make sure the server is running.**
+- **Frontend:** HTML, CSS, JavaScript, JSP 2.3, EL 3.0, JSTL 1.2
+- **Backend:** Java EE (Servlet 4.0)
+- **Database:** MySQL 8 (or MariaDB)
+- **Tools:** Git, Maven 3.6+, Apache Tomcat 9.x, IDE (Eclipse/IntelliJ/NetBeans)
 
-**Step 2 - Import the database file.** Open a terminal in the project folder and run
+## Screenshots
+
+*(Add screenshots of the application's main pages here, for example:)*
+
+![Home Page Screenshot](docs/screenshots/homepage.png)
+![Admin Dashboard](docs/screenshots/admin.png)
+
+## Prerequisites
+
+Before running the project, ensure you have the following installed:
+
+- JDK 11 or higher
+- Maven 3.6+
+- Apache Tomcat 9.x
+- MySQL 8 (or XAMPP / MariaDB) - optional, for database mode
+
+> **Note:** Tomcat 9 uses the `javax.*` namespace, which this project uses. Tomcat 10+ needs `jakarta.*` (replace `javax.servlet` with `jakarta.servlet` and use JSTL `jakarta.tags.core` URIs).
+
+## Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone <YOUR_REPOSITORY_URL>
+   ```
+
+2. **Open the project directory:**
+   ```bash
+   cd bookverse-portal
+   ```
+
+3. **Build the project using Maven:**
+   ```bash
+   mvn clean package
+   ```
+   *This compiles the code and packages it into `target/bookverse.war`, including the required MySQL JDBC driver (`mysql-connector-j`).*
+   *(Without Maven? Use the ready-made `bookverse.war` and copy the driver yourself to `<TOMCAT_HOME>/lib/`.)*
+
+## Database Setup (MySQL Database Mode)
+
+1. **Install and start** your MySQL 8 (or MariaDB) server.
+2. **Import the database file:** Open a terminal in the project folder and run:
+   ```bash
+   mysql -u root -p < database/bookverse.sql
+   ```
+   *(Alternatively, use MySQL Workbench or phpMyAdmin to import `database/bookverse.sql`)*
+   This creates the `bookverse` database, the six tables, a `bookverse` user (password `bookverse123`), and populates sample data.
+   *(Use `database/bookverse_schema_only.sql` if you want empty tables instead).*
+
+## Configuration
+
+Check the connection settings in `src/main/webapp/WEB-INF/web.xml` (under the "Database" section):
+```xml
+<env-entry>
+    <env-entry-name>db.url</env-entry-name>
+    <env-entry-type>java.lang.String</env-entry-type>
+    <env-entry-value>jdbc:mysql://localhost:3306/bookverse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Colombo</env-entry-value>
+</env-entry>
 ```
-mysql -u root -p < database/bookverse.sql
+If your MySQL uses a different port, user, or password, you can change them here. You can also override these by setting the following environment variables:
+```env
+BOOKVERSE_DB_URL=jdbc:mysql://localhost:3306/bookverse
+BOOKVERSE_DB_USER=your_username
+BOOKVERSE_DB_PASSWORD=your_password
+BOOKVERSE_DB_DRIVER=com.mysql.cj.jdbc.Driver
 ```
-(or in MySQL Workbench: File > Open SQL Script > `database/bookverse.sql` > click the lightning bolt;
-or in phpMyAdmin: Import tab > choose the file > Go).
-This creates the `bookverse` database, the six tables, a `bookverse` user (password `bookverse123`) and sample data.
-Use `database/bookverse_schema_only.sql` instead if you want empty tables; the application then fills them with the
-same sample data on first start.
 
-**Step 3 - Check the connection settings** in `src/main/webapp/WEB-INF/web.xml` (section "Database"):
+*To run without a database (In-memory mode):* Set `db.url` to an empty value in `web.xml` (or simply do not start MySQL).
+
+## Running the Project
+
+1. **Deploy on Tomcat 9.x:** Copy the generated `target/bookverse.war` (or ready-made `bookverse.war`) to your `<TOMCAT_HOME>/webapps/` directory.
+2. **Start Tomcat** and open your browser to `http://localhost:8080/bookverse/`.
+3. **Verify:** Check the page footer. If the database is connected successfully, it will say **"Data store: MySQL database"**.
+   - *Troubleshooting:* If it says "In-memory demo data (database unavailable)", check Tomcat logs. Typical causes: MySQL not running, wrong user/password, missing driver jar, missing database import.
+4. **Demo Accounts:**
+   - Member: `member@bookverse.lk` / `member123`
+   - Staff: `admin@bookverse.lk` / `admin123`
+
+## Project Structure
+
+```text
+bookverse-portal/
+├── src/
+│   └── main/
+│       ├── java/          # Java source code (Controllers, Models, DAOs, Services)
+│       └── webapp/        # Web resources (JSP views, CSS, JS, WEB-INF)
+├── database/              # SQL scripts for database schema and sample data
+├── pom.xml                # Maven configuration and dependencies
+└── README.md              # Project documentation
 ```
-db.url      jdbc:mysql://localhost:3306/bookverse?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Colombo...
-db.user     bookverse
-db.password bookverse123
-db.driver   com.mysql.cj.jdbc.Driver
-```
-Change them only if your MySQL uses another port, user or password. You can also set the environment variables
-`BOOKVERSE_DB_URL`, `BOOKVERSE_DB_USER`, `BOOKVERSE_DB_PASSWORD`, `BOOKVERSE_DB_DRIVER`, which override web.xml.
 
-**Step 4 - Build with Maven** (the MySQL driver `mysql-connector-j` is declared in `pom.xml` and is packaged into the WAR):
-```
-mvn clean package
-```
-*Without Maven?* Use the ready-made `bookverse.war` and copy the driver yourself: download
-`mysql-connector-j-8.4.0.jar` (https://dev.mysql.com/downloads/connector/j/ - "Platform Independent", or Maven Central:
-`https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.4.0/mysql-connector-j-8.4.0.jar`) and put it into
-`<TOMCAT_HOME>/lib/`, then restart Tomcat.
+## Application Details & Mappings
 
-**Step 5 - Deploy on Apache Tomcat 9.x:** copy `target/bookverse.war` (or the ready-made `bookverse.war`) to
-`<TOMCAT_HOME>/webapps/`, start Tomcat and open `http://localhost:8080/bookverse/`.
-
-**Step 6 - Verify.** The footer must say **Data store: MySQL database**. Sign in as `member@bookverse.lk` /
-`member123`, reserve a book, then run `SELECT * FROM reservations;` in MySQL - the new loan is there.
-
-**Troubleshooting.** If the footer says "In-memory demo data (database unavailable)", open
-`<TOMCAT_HOME>/logs/localhost.<date>.log` or `catalina.out` and look for `[BookVerse] SEVERE`. Typical causes:
-MySQL not running; wrong user/password; driver jar missing; database not imported
-(`Table 'bookverse.books' doesn't exist`); port other than 3306.
-MySQL 5.7 / MariaDB: same steps (MariaDB users can also use the MariaDB driver:
-`db.driver=org.mariadb.jdbc.Driver`, `db.url=jdbc:mariadb://localhost:3306/bookverse`).
-
-### Run without a database
-Set `db.url` to an empty value in web.xml (or just do not start MySQL). Requirements: JDK 11+, Maven 3.6+, Tomcat 9.x.
-
-### IDE (Eclipse / IntelliJ / NetBeans)
-Import as an existing **Maven project**, add a Tomcat 9 server, run on server.
-
-> Tomcat 9 uses the `javax.*` namespace, which this project uses. Tomcat 10+ needs `jakarta.*`
-> (replace `javax.servlet` with `jakarta.servlet` and use JSTL `jakarta.tags.core` URIs).
-
-### Database design
-| Table | Purpose | Key columns |
-|---|---|---|
-| `membership_plans` | booking rules per plan | PK `type` (STANDARD / PREMIUM / STUDENT) |
-| `members` | accounts (staff and members) | PK `id`, unique `email`, FK `membership_type` -> plans |
-| `books` | catalogue | PK `id`, CHECK `available_copies <= total_copies` |
-| `reservations` | loans and history | PK `id`, FK `member_email` -> members(email), index on `book_id`, `status` |
-| `announcements` | home page news | PK `id` |
-| `feedback` | member feedback | PK `id`, CHECK `rating` 1-5 |
-
-`reservations.book_id` is intentionally not a foreign key, so loan history survives when a title is deleted.
-Data access: `com.bookverse.data.LibraryStore` (DAO interface) with `JdbcStore` (MySQL, PreparedStatements, transaction
-for loan + stock update) and `MemoryStore`. `LibraryService` loads everything at start-up and writes every change through
-the store.
-
-### Demo accounts
-| Role | Email | Password |
-|---|---|---|
-| Member | member@bookverse.lk | member123 |
-| Staff | admin@bookverse.lk | admin123 |
-
-## 2. Application map
+### Application map
 
 | URL | Controller command | View |
 |---|---|---|
@@ -118,26 +153,20 @@ the store.
 Shared fragments: `views/fragments/header.jsp`, `footer.jsp`, `note.jsp`.
 Total JSP files: **26** (minimum 8).
 
-## 2a. Where is the admin panel?
-Sign in as `admin@bookverse.lk` and click **Staff** in the top bar (or open `/bookverse/admin.do`).
-A tab bar (`t:adminNav`) links the eight staff sections:
+### Database design
+| Table | Purpose | Key columns |
+|---|---|---|
+| `membership_plans` | booking rules per plan | PK `type` (STANDARD / PREMIUM / STUDENT) |
+| `members` | accounts (staff and members) | PK `id`, unique `email`, FK `membership_type` -> plans |
+| `books` | catalogue | PK `id`, CHECK `available_copies <= total_copies` |
+| `reservations` | loans and history | PK `id`, FK `member_email` -> members(email), index on `book_id`, `status` |
+| `announcements` | home page news | PK `id` |
+| `feedback` | member feedback | PK `id`, CHECK `rating` 1-5 |
 
-| Tab | What staff can do |
-|---|---|
-| Overview | Statistics, overdue loans (return / +7 days), sold-out titles, shortcuts |
-| Books | Search, add, **edit** (copies, rating, details) and **delete** titles (blocked while on loan) |
-| Members | Search/filter accounts; change **plan**, name, **role** (Member/Staff) and **status** (Active/Suspended); reset passwords; see loan history |
-| Loans | Filter by All/Active/Overdue/Returned; force return; extend due date by 7 days |
-| Plans | Edit the booking rules of Standard, Premium and Student |
-| Announcements | Publish and delete announcements |
-| Feedback | Read and delete member feedback, average rating |
-| Reports | Most borrowed titles, loans by status, members by plan, copies by category |
+`reservations.book_id` is intentionally not a foreign key, so loan history survives when a title is deleted.
+Data access: `com.bookverse.data.LibraryStore` (DAO interface) with `JdbcStore` (MySQL, PreparedStatements, transaction for loan + stock update) and `MemoryStore`. `LibraryService` loads everything at start-up and writes every change through the store.
 
-Safeguards: staff cannot suspend or demote their own account; suspended users are signed out on their next
-request and cannot log in; a title on loan cannot be deleted or have copies reduced below the number on loan;
-a member cannot be moved to a plan whose loan limit is below their open loans.
-
-## 2b. Membership plans (booking data per plan)
+### Membership plans (booking data per plan)
 | Rule | Standard | Premium | Student |
 |---|---|---|---|
 | Active loans at once | 3 | 8 | 5 |
@@ -146,51 +175,41 @@ a member cannot be moved to a plan whose loan limit is below their open loans.
 | Renewals per loan | 1 | 3 | 2 |
 | Monthly fee | Rs. 500 | Rs. 1,500 | Free |
 
-These are defaults; staff can edit all values on the **Plans** tab and the change applies immediately to new
-reservations and renewals (`LibraryService.reserve`, `renew`, `loanDaysFor`). Members can **renew** loans and
-**switch between Standard and Premium** on their dashboard; Student is granted by staff. The plan shown on the
-book page decides the due date (`BookDetailCommand` -> `LoanPolicy` bean). The `maxActiveLoans` context-param
-now sets the default Standard loan limit.
+These are defaults; staff can edit all values on the **Plans** tab and the change applies immediately to new reservations and renewals. The plan shown on the book page decides the due date.
 
-## 3. Where each assessment requirement is implemented
+### Where each assessment requirement is implemented
 
 | Requirement | Where to look |
 |---|---|
-| **EL implicit objects** `pageScope, requestScope, sessionScope, applicationScope, param, paramValues, header, headerValues, cookie, initParam, pageContext` | `views/elDemo.jsp` (live table, one row per expression). Also used across all pages, e.g. `sessionScope.member`, `applicationScope.appName`, `initParam.supportEmail`, `pageContext.request.contextPath` |
-| EL `.` and `[]` operators | `elDemo.jsp` section 5 (`books[0].title`, `sampleMap['key.with.dots']`, `header['user-agent']`, `pageContext.session['new']`) |
-| `jsp:useBean` | `catalog.jsp`, `login.jsp`, `register.jsp` (with body initialisation), `dashboard.jsp` (session scope), `bookDetail.jsp` (page scope), `feedback.jsp`, `footer.jsp` |
-| `jsp:setProperty` | `feedback.jsp` (`property="*"`), `login.jsp` (`param=`), `register.jsp` (`value=`), `bookDetail.jsp` (`value="${book.loanDays}"`) |
+| **EL implicit objects** | `views/elDemo.jsp` (live table, one row per expression). Also used across all pages. |
+| EL `.` and `[]` operators | `elDemo.jsp` section 5 |
+| `jsp:useBean` | `catalog.jsp`, `login.jsp`, `register.jsp`, `dashboard.jsp`, `bookDetail.jsp`, `feedback.jsp`, `footer.jsp` |
+| `jsp:setProperty` | `feedback.jsp`, `login.jsp`, `register.jsp`, `bookDetail.jsp` |
 | `jsp:getProperty` | `catalog.jsp`, `bookDetail.jsp`, `dashboard.jsp`, `feedbackThanks.jsp` |
 | `jsp:include` + `jsp:param` | every view (header/footer), `elDemo.jsp` (`note.jsp`) |
 | `jsp:forward` + `jsp:param` | `index.jsp`, `feedback.jsp` |
-| `jsp:attribute` | `home.jsp` (fragment attribute of `<t:card>`), `elDemo.jsp` (value of `jsp:param`) |
+| `jsp:attribute` | `home.jsp`, `elDemo.jsp` |
 | JSTL core | `c:set, c:out, c:if, c:choose/when/otherwise, c:forEach (varStatus), c:forTokens, c:remove, c:url, c:param`; also `fn:` and `fmt:formatDate` |
 | No scriptlets | enforced by `<scripting-invalid>true` in `web.xml` |
-| Custom tags (handlers) | `RatingTag` (SimpleTag), `AvailabilityTag` (Tag, PageContext API, `doStartTag/doEndTag/release`), `HighlightTag` (BodyTag, `doAfterBody`, `getPreviousOut`) – declared in `WEB-INF/tld/bookverse.tld` |
-| Tag files | `WEB-INF/tags/`: `card.tag` (fragment attribute + `jsp:doBody`), `alert.tag`, `pageHeader.tag`, `bookcard.tag`, `elrow.tag`, `adminNav.tag` |
-| Scopes | application: `appName, visitCounter, activeSessions, startedAt` · session: `member, flash*, demoNote` · request: `books, criteria, errors …` · page: `c:set`, `loanPolicy` bean |
+| Custom tags (handlers) | `RatingTag`, `AvailabilityTag`, `HighlightTag` – declared in `WEB-INF/tld/bookverse.tld` |
+| Tag files | `WEB-INF/tags/`: `card.tag`, `alert.tag`, `pageHeader.tag`, `bookcard.tag`, `elrow.tag`, `adminNav.tag` |
+| Scopes | application, session, request, page scopes utilized heavily |
 | MVC (mandatory) | Model: `model/`, `bean/`, `service/` · View: JSP · Controller: `FrontController` + `command/` |
 | Front Controller | `controller/FrontController.java` (`*.do`) |
 | Command | `command/Command.java` and 26 implementing classes |
-| Intercepting Filter | `EncodingFilter`, `LoggingFilter`, `AuthFilter` (members, and every `admin*` command for STAFF; order set in `web.xml`) |
+| Intercepting Filter | `EncodingFilter`, `LoggingFilter`, `AuthFilter` |
 | Business Delegate | `service/LibraryDelegate.java` |
-| Data Access Object (DAO) | `data/LibraryStore.java` (interface), `JdbcStore.java` (MySQL), `MemoryStore.java` |
-| Service Locator | `service/ServiceLocator.java` |
 | Data Access Object (DAO) | `data/LibraryStore.java`, `JdbcStore.java`, `MemoryStore.java` |
+| Service Locator | `service/ServiceLocator.java` |
 | Transfer Object | `Book, Member, MembershipPlan, Reservation, Announcement` (Serializable) |
 | Listeners | `AppContextListener`, `SessionCountListener` |
-| Error handling & validation | `error.jsp` + `<error-page>`; `RegistrationForm.validate()`, `FeedbackBean.getErrors()`, `AddBookCommand`, business rules in `LibraryService` (loan limit, no stock, duplicate email) |
-| Security basics | HTML escaping with `c:out` / tag handlers, whitelist redirect after login, session id change on login, HttpOnly cookies, POST for state changes, salted password hashes |
+| Error handling & validation | `error.jsp` + `<error-page>`; `RegistrationForm.validate()`, `FeedbackBean.getErrors()`, `AddBookCommand`, business rules |
+| Security basics | HTML escaping, whitelist redirect after login, session id change, HttpOnly cookies, POST for state changes, salted password hashes |
 
-## 4. Assumptions (document these in the report)
-1. Data is stored in MySQL when a database is configured (section 1). Without one, the app falls back to in-memory demo data that resets on restart. The service keeps a working copy in memory and writes every change through to the database; connections are opened per operation (a connection pool is a future improvement).
-2. A "reservation" is an immediate loan of one copy; limits and periods come from the member's plan (section 2b).
-3. Student status is not verified in software (library staff check student ID at the desk).
-4. Two roles only: MEMBER and STAFF. Staff accounts are pre-created.
-5. Ratings are static editorial scores (members cannot rate books).
-6. Passwords use salted SHA-256 for the demo; BCrypt/PBKDF2 would be used in production.
+## Testing
 
-## 5. Test checklist (all verified on Tomcat 9.0 during development)
+A manual test checklist is provided to verify system functionality during development:
+
 | # | Test | Expected |
 |---|---|---|
 | 1 | Open `/bookverse/` | Home page via `jsp:forward`; visit counter in footer increases |
@@ -227,7 +246,36 @@ now sets the default Standard loan limit.
 | 32 | Add a title with unicode characters (e.g. "Caf\u00e9"), restart | Title still correct (utf8mb4) |
 | 33 | Start with a wrong database password | Application still starts, footer says "database unavailable", error in log |
 
-## 6. Future improvements (for the report)
-A connection pool (HikariCP / Tomcat JDBC pool) and JPA; CSRF tokens; BCrypt; pagination; waiting lists and
-renewals; e-mail notifications; REST/JSON API; i18n through `fmt:message`; unit tests for the service layer;
-caching of catalogue queries; moving to Jakarta EE 10 / Tomcat 10.
+*(To run automated tests, if implemented, use `mvn test`)*
+
+## Known Issues (Assumptions)
+
+- A "reservation" is an immediate loan of one copy; limits and periods come from the member's plan.
+- Student status for membership plans is not verified in software (library staff check student ID at the desk).
+- Two roles only: MEMBER and STAFF. Staff accounts are pre-created.
+- Ratings are static editorial scores; members cannot rate books currently.
+- Passwords use salted SHA-256 for the demo environment instead of more secure algorithms like BCrypt.
+
+## Future Improvements
+
+- Connection pool (HikariCP / Tomcat JDBC pool) and JPA integration.
+- Enhanced security: CSRF tokens and BCrypt password hashing.
+- Pagination, waiting lists, and e-mail notifications for reservations.
+- REST/JSON API for extended platform integrations.
+- Internationalization (i18n) through `fmt:message`.
+- Comprehensive unit tests for the service layer.
+- Caching of catalogue queries.
+- Migration to Jakarta EE 10 / Tomcat 10.
+
+## Contributing
+
+Contributions are welcome! If you would like to report bugs, suggest features, or submit pull requests:
+1. Fork the repository.
+2. Create a new branch for your feature (`git checkout -b feature-name`).
+3. Commit your changes (`git commit -m 'Add some feature'`).
+4. Push to the branch (`git push origin feature-name`).
+5. Open a Pull Request.
+
+## License
+
+This project is intended for educational purposes (HF2K Web Component Development II assessment).
