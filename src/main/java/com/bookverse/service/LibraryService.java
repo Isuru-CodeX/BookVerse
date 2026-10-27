@@ -327,13 +327,15 @@ public class LibraryService {
     public List<Reservation> reservationsFor(String email) {
         List<Reservation> out = new ArrayList<>();
         for (Reservation r : reservations) if (r.getMemberEmail().equalsIgnoreCase(email)) out.add(r);
-        out.sort(Comparator.comparing(Reservation::getReservedOn).reversed());
+        // ⚡ Bolt: Use a direct lambda for Date comparison instead of Comparator.comparing().reversed() to avoid function call overhead
+        out.sort((r1, r2) -> r2.getReservedOn().compareTo(r1.getReservedOn()));
         return out;
     }
 
     public List<Reservation> allReservations() {
         List<Reservation> out = new ArrayList<>(reservations);
-        out.sort(Comparator.comparing(Reservation::getReservedOn).reversed());
+        // ⚡ Bolt: Use a direct lambda for Date comparison instead of Comparator.comparing().reversed() to avoid function call overhead
+        out.sort((r1, r2) -> r2.getReservedOn().compareTo(r1.getReservedOn()));
         return out;
     }
 
