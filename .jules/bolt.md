@@ -13,3 +13,7 @@
 ## 2026-10-26 - [Optimize Date Sorting Allocations and Overhead]
 **Learning:** Using `Comparator.comparing(Reservation::getReservedOn).reversed()` creates wrapper overhead and invokes method references on every element comparison, significantly slowing down standard collections sort. Replacing it with a direct comparison lambda like `(r1, r2) -> r2.getReservedOn().compareTo(r1.getReservedOn())` eliminates method dispatching wrappers and cuts sorting time by more than half for larger sets.
 **Action:** Use a direct lambda invoking `compareTo` when sorting object fields such as `Date` instead of chaining `Comparator.comparing(...).reversed()`.
+
+## 2026-10-28 - [Optimize String allocation in simple word parsing]
+**Learning:** `String.split()` creates unnecessary object allocations (regex compilation, string array, substring objects) when only iterating through a string to find specific characters or words.
+**Action:** Use character iteration (`charAt()`) with state flags for simple string parsing tasks like extracting initials, avoiding O(N) memory allocation and regex overhead.
