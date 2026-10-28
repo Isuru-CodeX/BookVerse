@@ -57,10 +57,18 @@ public class Book implements Serializable {
 
     /** Up to two capital letters used on the generated cover. Read-only property. */
     public String getInitials() {
+        // ⚡ Bolt: Prevented string allocation and regex overhead by iterating characters directly
         StringBuilder sb = new StringBuilder();
-        for (String w : title.trim().split("\\s+")) {
-            if (!w.isEmpty() && Character.isLetter(w.charAt(0)) && sb.length() < 2) {
-                sb.append(Character.toUpperCase(w.charAt(0)));
+        boolean newWord = true;
+        for (int i = 0; i < title.length() && sb.length() < 2; i++) {
+            char c = title.charAt(i);
+            if (Character.isWhitespace(c)) {
+                newWord = true;
+            } else if (newWord) {
+                if (Character.isLetter(c)) {
+                    sb.append(Character.toUpperCase(c));
+                }
+                newWord = false;
             }
         }
         return sb.length() == 0 ? "BV" : sb.toString();
