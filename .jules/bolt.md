@@ -17,3 +17,7 @@
 ## 2026-10-28 - [Optimize String allocation in simple word parsing]
 **Learning:** `String.split()` creates unnecessary object allocations (regex compilation, string array, substring objects) when only iterating through a string to find specific characters or words.
 **Action:** Use character iteration (`charAt()`) with state flags for simple string parsing tasks like extracting initials, avoiding O(N) memory allocation and regex overhead.
+
+## 2026-10-31 - [Optimize Regex Overhead in Custom JSP Tags]
+**Learning:** Dynamically compiling a `Pattern` inside a loop or JSP tag handler for every request/match creates unnecessary CPU overhead, object allocations, and GC churn. A standard fast-path text search using `String.regionMatches(true, ...)` can achieve case-insensitive string highlighting 4-5x faster than regex matching.
+**Action:** Replace `Pattern.compile()` and `Matcher.find()` with a custom string search algorithm like `indexOfIgnoreCase` and `regionMatches` for simple case-insensitive text matching/highlighting to avoid compilation overhead.

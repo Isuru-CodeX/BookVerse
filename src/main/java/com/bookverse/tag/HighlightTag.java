@@ -29,14 +29,26 @@ public class HighlightTag extends BodyTagSupport {
         String safe = escape(body);
         int count = 0;
         if (keyword != null && !keyword.trim().isEmpty()) {
-            Matcher m = Pattern.compile(Pattern.quote(escape(keyword.trim())), Pattern.CASE_INSENSITIVE).matcher(safe);
-            StringBuffer sb = new StringBuffer();
-            while (m.find()) {
-                count++;
-                m.appendReplacement(sb, "<mark>" + Matcher.quoteReplacement(m.group()) + "</mark>");
+            String q = escape(keyword.trim());
+            int qLen = q.length();
+            if (qLen > 0) {
+                // ⚡ Bolt: Replaced Regex compilation and Matcher with fast indexOfIgnoreCase + regionMatches to eliminate regex overhead and object allocation.
+                StringBuilder sb = new StringBuilder();
+                int lastIdx = 0;
+                int len = safe.length();
+                while (lastIdx < len) {
+                    int found = indexOfIgnoreCase(safe, q, lastIdx);
+                    if (found == -1) {
+                        sb.append(safe.substring(lastIdx));
+                        break;
+                    }
+                    count++;
+                    sb.append(safe.substring(lastIdx, found));
+                    sb.append("<mark>").append(safe.substring(found, found + qLen)).append("</mark>");
+                    lastIdx = found + qLen;
+                }
+                safe = sb.toString();
             }
-            m.appendTail(sb);
-            safe = sb.toString();
         }
         try {
             getPreviousOut().write(safe);
@@ -55,5 +67,22 @@ public class HighlightTag extends BodyTagSupport {
 
     private static String escape(String s) {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
+    }
+
+    private static int indexOfIgnoreCase(String src, String what, int fromIndex) {
+        if (what.isEmpty()) return -1;
+        final int srcLen = src.length();
+        final int whatLen = what.length();
+        final int max = srcLen - whatLen;
+        if (max < 0) return -1;
+        char firstLower = Character.toLowerCase(what.charAt(0));
+        char firstUpper = Character.toUpperCase(what.charAt(0));
+        for (int i = fromIndex; i <= max; i++) {
+            char c = src.charAt(i);
+            if (c == firstLower || c == firstUpper) {
+                if (src.regionMatches(true, i, what, 0, whatLen)) return i;
+            }
+        }
+        return -1;
     }
 }
