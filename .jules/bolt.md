@@ -21,3 +21,7 @@
 ## 2026-10-31 - [Optimize Regex Overhead in Custom JSP Tags]
 **Learning:** Dynamically compiling a `Pattern` inside a loop or JSP tag handler for every request/match creates unnecessary CPU overhead, object allocations, and GC churn. A standard fast-path text search using `String.regionMatches(true, ...)` can achieve case-insensitive string highlighting 4-5x faster than regex matching.
 **Action:** Replace `Pattern.compile()` and `Matcher.find()` with a custom string search algorithm like `indexOfIgnoreCase` and `regionMatches` for simple case-insensitive text matching/highlighting to avoid compilation overhead.
+
+## 2026-11-01 - [Optimize Date object allocations in tight loops]
+**Learning:** Calling `new Date()` inside loops (like `isOverdue()` checks iterating over all reservations) creates O(N) memory allocations and unnecessary Garbage Collection churn. Using `System.currentTimeMillis()` and comparing it directly to `date.getTime()` provides the same logic with zero allocations.
+**Action:** Use `System.currentTimeMillis()` for timestamp comparisons inside iterations to avoid allocating new `Date` objects repeatedly.
