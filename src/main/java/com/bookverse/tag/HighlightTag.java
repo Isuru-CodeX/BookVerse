@@ -4,8 +4,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.bookverse.util.TextUtil;
 
 /**
  * Body tag handler (BodyTag lifecycle):
@@ -37,7 +36,7 @@ public class HighlightTag extends BodyTagSupport {
                 int lastIdx = 0;
                 int len = safe.length();
                 while (lastIdx < len) {
-                    int found = indexOfIgnoreCase(safe, q, lastIdx);
+                    int found = TextUtil.indexOfIgnoreCase(safe, q, lastIdx);
                     if (found == -1) {
                         sb.append(safe.substring(lastIdx));
                         break;
@@ -69,20 +68,4 @@ public class HighlightTag extends BodyTagSupport {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
 
-    private static int indexOfIgnoreCase(String src, String what, int fromIndex) {
-        if (what.isEmpty()) return -1;
-        final int srcLen = src.length();
-        final int whatLen = what.length();
-        final int max = srcLen - whatLen;
-        if (max < 0) return -1;
-        char firstLower = Character.toLowerCase(what.charAt(0));
-        char firstUpper = Character.toUpperCase(what.charAt(0));
-        for (int i = fromIndex; i <= max; i++) {
-            char c = src.charAt(i);
-            if (c == firstLower || c == firstUpper) {
-                if (src.regionMatches(true, i, what, 0, whatLen)) return i;
-            }
-        }
-        return -1;
-    }
 }
