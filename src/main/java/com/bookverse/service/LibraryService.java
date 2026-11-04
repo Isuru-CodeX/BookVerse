@@ -11,6 +11,7 @@ import com.bookverse.model.Member;
 import com.bookverse.model.MembershipPlan;
 import com.bookverse.model.Reservation;
 import com.bookverse.util.PasswordUtil;
+import com.bookverse.util.TextUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -207,7 +208,7 @@ public class LibraryService {
     }
 
     public List<Book> search(SearchCriteria c) {
-        String kw = c.getKeyword().toLowerCase();
+        String kw = c.getKeyword();
         Comparator<Book> order;
         switch (c.getSort()) {
             case "rating": order = Comparator.comparingDouble(Book::getRating).reversed(); break;
@@ -216,7 +217,8 @@ public class LibraryService {
             default:       order = Comparator.comparing(Book::getTitle, String.CASE_INSENSITIVE_ORDER);
         }
         return books.stream()
-                .filter(b -> kw.isEmpty() || b.getTitle().toLowerCase().contains(kw) || b.getAuthor().toLowerCase().contains(kw))
+                // ⚡ Bolt: Prevented O(N) String allocations during search filtering by using TextUtil.containsIgnoreCase
+                .filter(b -> kw.isEmpty() || TextUtil.containsIgnoreCase(b.getTitle(), kw) || TextUtil.containsIgnoreCase(b.getAuthor(), kw))
                 .filter(b -> c.getCategory().isEmpty() || b.getCategory().equalsIgnoreCase(c.getCategory()))
                 .filter(b -> !c.isAvailableOnly() || b.isAvailable())
                 .sorted(order)
