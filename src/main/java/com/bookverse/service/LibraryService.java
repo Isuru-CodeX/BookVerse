@@ -11,6 +11,7 @@ import com.bookverse.model.Member;
 import com.bookverse.model.MembershipPlan;
 import com.bookverse.model.Reservation;
 import com.bookverse.util.PasswordUtil;
+import com.bookverse.util.TextUtil;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.ListIterator;
 import java.util.regex.Pattern;
 import java.util.List;
 import java.util.Map;
@@ -206,15 +208,17 @@ public class LibraryService {
     }
 
     public List<Book> search(SearchCriteria c) {
-        String kw = c.getKeyword().toLowerCase();
+        String kw = c.getKeyword();
         Comparator<Book> order;
         switch (c.getSort()) {
             case "rating": order = Comparator.comparingDouble(Book::getRating).reversed(); break;
             case "year":   order = Comparator.comparingInt(Book::getYear).reversed(); break;
-            default:       order = Comparator.comparing(b -> b.getTitle().toLowerCase());
+            // ⚡ Bolt: Prevented O(N log N) String allocations during sorting by using CASE_INSENSITIVE_ORDER
+            default:       order = Comparator.comparing(Book::getTitle, String.CASE_INSENSITIVE_ORDER);
         }
         return books.stream()
-                .filter(b -> kw.isEmpty() || b.getTitle().toLowerCase().contains(kw) || b.getAuthor().toLowerCase().contains(kw))
+                // ⚡ Bolt: Prevented O(N) String allocations during search filtering by using TextUtil.containsIgnoreCase
+                .filter(b -> kw.isEmpty() || TextUtil.containsIgnoreCase(b.getTitle(), kw) || TextUtil.containsIgnoreCase(b.getAuthor(), kw))
                 .filter(b -> c.getCategory().isEmpty() || b.getCategory().equalsIgnoreCase(c.getCategory()))
                 .filter(b -> !c.isAvailableOnly() || b.isAvailable())
                 .sorted(order)
@@ -226,9 +230,13 @@ public class LibraryService {
     }
 
     public List<Book> newestAdditions(int n) {
-        List<Book> copy = new ArrayList<>(books);
-        Collections.reverse(copy);
-        return copy.subList(0, Math.min(n, copy.size()));
+        // ⚡ Bolt: Prevented O(N) memory allocation by using a backward-traversing ListIterator
+        List<Book> newest = new ArrayList<>(Math.min(n, books.size()));
+        ListIterator<Book> it = books.listIterator(books.size());
+        while (it.hasPrevious() && newest.size() < n) {
+            newest.add(it.previous());
+        }
+        return newest;
     }
 
     public List<Book> relatedTo(Book book, int n) {
@@ -321,13 +329,15 @@ public class LibraryService {
     public List<Reservation> reservationsFor(String email) {
         List<Reservation> out = new ArrayList<>();
         for (Reservation r : reservations) if (r.getMemberEmail().equalsIgnoreCase(email)) out.add(r);
-        out.sort(Comparator.comparing(Reservation::getReservedOn).reversed());
+        // ⚡ Bolt: Use a direct lambda for Date comparison instead of Comparator.comparing().reversed() to avoid function call overhead
+        out.sort((r1, r2) -> r2.getReservedOn().compareTo(r1.getReservedOn()));
         return out;
     }
 
     public List<Reservation> allReservations() {
         List<Reservation> out = new ArrayList<>(reservations);
-        out.sort(Comparator.comparing(Reservation::getReservedOn).reversed());
+        // ⚡ Bolt: Use a direct lambda for Date comparison instead of Comparator.comparing().reversed() to avoid function call overhead
+        out.sort((r1, r2) -> r2.getReservedOn().compareTo(r1.getReservedOn()));
         return out;
     }
 
@@ -340,9 +350,13 @@ public class LibraryService {
     }
 
     public List<Announcement> latestAnnouncements(int n) {
-        List<Announcement> copy = new ArrayList<>(announcements);
-        Collections.reverse(copy);
-        return copy.subList(0, Math.min(n, copy.size()));
+        // ⚡ Bolt: Prevented O(N) memory allocation by using a backward-traversing ListIterator
+        List<Announcement> latest = new ArrayList<>(Math.min(n, announcements.size()));
+        ListIterator<Announcement> it = announcements.listIterator(announcements.size());
+        while (it.hasPrevious() && latest.size() < n) {
+            latest.add(it.previous());
+        }
+        return latest;
     }
 
     public synchronized void addFeedback(FeedbackBean fb) {
@@ -582,17 +596,19 @@ public class LibraryService {
                 .entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(6)
                 .forEach(e -> perTitle.put(e.getKey(), e.getValue()));
 
+        // ⚡ Bolt: Optimized O(N*M) nested loops to O(N+M) using frequency maps for plan members and category copies
+        Map<String, Integer> memberCounts = new java.util.HashMap<>();
+        for (Member m : members) memberCounts.merge(m.getMembershipType(), 1, Integer::sum);
         Map<String, Integer> perPlan = new LinkedHashMap<>();
         for (MembershipPlan p : plans.values()) {
-            int n = 0;
-            for (Member m : members) if (p.getType().equals(m.getMembershipType())) n++;
-            perPlan.put(p.getLabel(), n);
+            perPlan.put(p.getLabel(), memberCounts.getOrDefault(p.getType(), 0));
         }
+
+        Map<String, Integer> categoryCopies = new java.util.HashMap<>();
+        for (Book b : books) categoryCopies.merge(b.getCategory(), b.getTotalCopies(), Integer::sum);
         Map<String, Integer> perCategory = new LinkedHashMap<>();
         for (String c : getCategories()) {
-            int copies = 0;
-            for (Book b : books) if (b.getCategory().equals(c)) copies += b.getTotalCopies();
-            perCategory.put(c, copies);
+            perCategory.put(c, categoryCopies.getOrDefault(c, 0));
         }
         int active = 0, overdue = 0, returned = 0;
         for (Reservation r : reservations) {

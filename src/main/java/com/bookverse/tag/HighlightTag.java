@@ -4,8 +4,7 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.BodyTagSupport;
 import java.io.IOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.bookverse.util.TextUtil;
 
 /**
  * Body tag handler (BodyTag lifecycle):
@@ -29,14 +28,26 @@ public class HighlightTag extends BodyTagSupport {
         String safe = escape(body);
         int count = 0;
         if (keyword != null && !keyword.trim().isEmpty()) {
-            Matcher m = Pattern.compile(Pattern.quote(escape(keyword.trim())), Pattern.CASE_INSENSITIVE).matcher(safe);
-            StringBuffer sb = new StringBuffer();
-            while (m.find()) {
-                count++;
-                m.appendReplacement(sb, "<mark>" + Matcher.quoteReplacement(m.group()) + "</mark>");
+            String q = escape(keyword.trim());
+            int qLen = q.length();
+            if (qLen > 0) {
+                // ⚡ Bolt: Replaced Regex compilation and Matcher with fast indexOfIgnoreCase + regionMatches to eliminate regex overhead and object allocation.
+                StringBuilder sb = new StringBuilder();
+                int lastIdx = 0;
+                int len = safe.length();
+                while (lastIdx < len) {
+                    int found = TextUtil.indexOfIgnoreCase(safe, q, lastIdx);
+                    if (found == -1) {
+                        sb.append(safe.substring(lastIdx));
+                        break;
+                    }
+                    count++;
+                    sb.append(safe.substring(lastIdx, found));
+                    sb.append("<mark>").append(safe.substring(found, found + qLen)).append("</mark>");
+                    lastIdx = found + qLen;
+                }
+                safe = sb.toString();
             }
-            m.appendTail(sb);
-            safe = sb.toString();
         }
         try {
             getPreviousOut().write(safe);
@@ -56,4 +67,5 @@ public class HighlightTag extends BodyTagSupport {
     private static String escape(String s) {
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&#39;");
     }
+
 }
