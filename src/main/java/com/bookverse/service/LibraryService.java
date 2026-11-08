@@ -528,7 +528,7 @@ public class LibraryService {
         if (r == null) throw new LibraryException("Loan record not found.");
         if (!r.isActive()) throw new LibraryException("Only active loans can be extended.");
         if (days < 1 || days > 30) throw new LibraryException("Extension must be between 1 and 30 days.");
-        r.setDueDate(addDays(r.getDueDate().before(new Date()) ? new Date() : r.getDueDate(), days));
+        r.setDueDate(addDays(r.getDueDate().getTime() < System.currentTimeMillis() ? new Date() : r.getDueDate(), days));
         saveLoan(r, null);
         return r;
     }

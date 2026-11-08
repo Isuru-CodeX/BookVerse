@@ -42,5 +42,6 @@ public class Reservation implements Serializable {
     public void setRenewals(int renewals) { this.renewals = renewals; }
 
     public boolean isActive() { return ACTIVE.equals(status); }
-    public boolean isOverdue() { return isActive() && dueDate != null && dueDate.before(new Date()); }
+    // ⚡ Bolt: Use System.currentTimeMillis() instead of new Date() to avoid Date object allocation
+    public boolean isOverdue() { return isActive() && dueDate != null && dueDate.getTime() < System.currentTimeMillis(); }
 }

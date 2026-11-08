@@ -25,3 +25,7 @@
 ## 2026-11-01 - [Optimize case-insensitive search filtering allocations]
 **Learning:** Using chained `.toLowerCase().contains(keyword)` for collection filtering creates unnecessary `String` allocations on every check, leading to O(N) memory allocations and GC churn. A standard fast-path text search using `String.regionMatches(true, ...)` achieves case-insensitive filtering without producing intermediate String objects.
 **Action:** Use a fast-path text search algorithm (like `TextUtil.containsIgnoreCase` leveraging `regionMatches`) for case-insensitive filtering over large collections instead of `.toLowerCase().contains()`.
+
+## 2026-11-03 - [Optimize Date Allocation in comparisons]
+**Learning:** Using `new Date()` for a simple time comparison in a loop creates unnecessary object allocations.
+**Action:** Use `System.currentTimeMillis()` instead for time comparisons.
