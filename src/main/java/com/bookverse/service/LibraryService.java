@@ -23,6 +23,7 @@ import java.util.ListIterator;
 import java.util.regex.Pattern;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -226,7 +227,20 @@ public class LibraryService {
     }
 
     public List<Book> topRated(int n) {
-        return books.stream().sorted(Comparator.comparingDouble(Book::getRating).reversed()).limit(n).collect(Collectors.toList());
+        // ⚡ Bolt: Prevented O(N log N) time complexity and wrapper allocations by using a Min-Heap (PriorityQueue) instead of sorting the whole stream
+        if (n <= 0) return new ArrayList<>();
+        PriorityQueue<Book> pq = new PriorityQueue<>(Math.min(n, books.size()) + 1, (b1, b2) -> Double.compare(b1.getRating(), b2.getRating()));
+        for (Book b : books) {
+            if (pq.size() < n) {
+                pq.offer(b);
+            } else if (b.getRating() > pq.peek().getRating()) {
+                pq.offer(b);
+                pq.poll();
+            }
+        }
+        List<Book> res = new ArrayList<>(pq);
+        res.sort((b1, b2) -> Double.compare(b2.getRating(), b1.getRating()));
+        return res;
     }
 
     public List<Book> newestAdditions(int n) {
