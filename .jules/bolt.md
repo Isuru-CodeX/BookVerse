@@ -25,3 +25,7 @@
 ## 2026-11-01 - [Optimize case-insensitive search filtering allocations]
 **Learning:** Using chained `.toLowerCase().contains(keyword)` for collection filtering creates unnecessary `String` allocations on every check, leading to O(N) memory allocations and GC churn. A standard fast-path text search using `String.regionMatches(true, ...)` achieves case-insensitive filtering without producing intermediate String objects.
 **Action:** Use a fast-path text search algorithm (like `TextUtil.containsIgnoreCase` leveraging `regionMatches`) for case-insensitive filtering over large collections instead of `.toLowerCase().contains()`.
+
+## 2026-11-09 - [Optimize top-N retrieval with PriorityQueue]
+**Learning:** Sorting an entire collection using `stream().sorted(...).limit(N)` creates an inefficient O(N log N) time complexity and wrapper allocations, just to retrieve the top N items. A `PriorityQueue` (Min-Heap) maintains only the top N items in O(N log K) time and is much faster for hot paths.
+**Action:** Use a `PriorityQueue` of size `N+1` when finding the top N elements of a large collection instead of sorting the whole stream/collection. Check `peek()` before offering to skip the O(log K) insertion cost for discarded items.
